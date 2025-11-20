@@ -10,10 +10,10 @@ export const MEMORY_SIZE = 0x100000; // 1MB
 
 /**
  * Calcula endereço físico a partir de segmento e offset
- * Fórmula: Physical = (Segment << 4) + Offset
+ * Fórmula: Physical = (Segment * 16) + Offset
  */
 export function physicalAddress(segment: number, offset: number): number {
-  return ((segment << 4) + offset) & 0xfffff; // Máscara para 20 bits (1MB)
+  return (segment * 16 + offset) & 0xfffff; 
 }
 
 /**
