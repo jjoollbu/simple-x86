@@ -62,7 +62,7 @@ Transporta endereços de memória do processador para a memória.
 
 ```
 CS = 0x1000, IP = 0x0050
-Endereço Físico = (0x1000 << 4) + 0x0050 = 0x10050
+Endereço Físico = (0x1000 * 16) + 0x0050 = 0x10050
 ```
 
 ### 2. Barramento de Dados (Data Bus)
@@ -171,7 +171,7 @@ O processador opera em modo real, usando segmentação para acessar 1 MB de mem�
 
 - Registradores de segmento: CS, DS, SS, ES (16 bits cada)
 - Registradores de offset: IP, SP, BP, SI, DI, etc. (16 bits)
-- Endereço físico de 20 bits: (Segmento << 4) + Offset
+- Endereço físico de 20 bits: (Segmento * 16) + Offset
 
 ### Acesso à Memória
 
