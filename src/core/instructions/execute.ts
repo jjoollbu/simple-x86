@@ -119,7 +119,6 @@ export function executeInstruction(
   push: (value: number) => void,
   pop: () => number
 ): string {
-  // Tenta cada categoria de instrução
   let result: string | null = null;
 
   result = tryHandleArithmetic(ctx);

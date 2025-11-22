@@ -64,33 +64,26 @@ export class CPU implements ICPU {
   }
 
   public loadProgram(instructions: Instruction[]): void {
-    // Limpar apenas memória e programa, mantendo registradores
     this.memory.reset();
     this.trace = [];
     this.program = instructions.slice();
     this.instructionMap.clear();
 
-    // Resetar flags e estado de execução
     this.state.halted = false;
     this.state.cycles = 0;
     this.state.registers.IP = 0;
 
-    // Carregar bytes das instruções na memória sequencialmente
     let currentOffset = 0;
     const CS = this.state.registers.segment.CS;
 
     for (const instruction of instructions) {
-      // O parser já definiu instruction.address como offset
-      // Calcular endereço físico com CS
+
       const physAddr = physicalAddress(CS, currentOffset);
 
-      // Guardar mapeamento endereço → instrução
       this.instructionMap.set(physAddr, instruction);
 
-      // Atualizar address com o físico calculado
       instruction.address = physAddr;
 
-      // Escrever bytes da instrução na memória
       for (let i = 0; i < instruction.bytes.length; i++) {
         const byte = instruction.bytes[i];
         if (byte !== undefined) {
@@ -98,7 +91,6 @@ export class CPU implements ICPU {
         }
       }
 
-      // Avançar para próxima instrução
       currentOffset += instruction.size;
     }
   }
@@ -214,10 +206,8 @@ export class CPU implements ICPU {
     const CS = this.state.registers.segment.CS;
     const IP = this.state.registers.IP;
 
-    // Calcular endereço físico da instrução
     const fetchAddr = physicalAddress(CS, IP);
 
-    // Buscar instrução pelo endereço físico
     const instruction = this.instructionMap.get(fetchAddr);
     if (!instruction) {
       this.state.halted = true;
@@ -226,7 +216,6 @@ export class CPU implements ICPU {
 
     const stateBefore = this.cloneState();
 
-    // Limpar log de memória antes da execução
     this.memory.clearAccessLog();
 
     const busOperations: BusOperation[] = [];
@@ -246,7 +235,6 @@ export class CPU implements ICPU {
     // Fase 2: BUS DADOS - Memória envia opcode
     const opcodeByte = instruction.bytes[0] ?? 0;
 
-    // Formatar texto da instrução para exibição
     const instrText = this.formatInstruction(instruction);
 
     busOperations.push({
@@ -335,7 +323,6 @@ export class CPU implements ICPU {
     const stateAfter = this.cloneState();
     this.state.cycles++;
 
-    // Adicionar operações de memória ao bus (padrão: BUS END → BUS DADOS)
     for (const access of this.memory.accessLog) {
       // Fase 1: BUS END - CPU envia endereço
       busOperations.push({

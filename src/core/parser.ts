@@ -121,7 +121,6 @@ export function parseAssembly(source: string): ParseResult {
       continue;
     }
 
-    // Parsear instrução
     const parseResult = parseInstructionLine(trimmed, lineNum + 1, rawLine);
 
     if (parseResult.error) {
@@ -130,7 +129,6 @@ export function parseAssembly(source: string): ParseResult {
     }
 
     if (parseResult.instruction) {
-      // Verificar referências a labels
       for (let i = 0; i < parseResult.instruction.args.length; i++) {
         const arg = parseResult.instruction.args[i];
         if (
@@ -151,14 +149,12 @@ export function parseAssembly(source: string): ParseResult {
     }
   }
 
-  // Calcular offsets de memória para cada instrução
   let currentOffset = 0;
   for (const instr of instructions) {
     instr.address = currentOffset;
     currentOffset += instr.size;
   }
 
-  // Converter labels de índice para offset de memória
   const labelOffsets = new Map<string, number>();
   for (const [labelName, instructionIndex] of labels.entries()) {
     const instruction = instructions[instructionIndex];
@@ -167,7 +163,6 @@ export function parseAssembly(source: string): ParseResult {
     }
   }
 
-  // Resolver referências de labels com offsets de memória
   for (const ref of pendingReferences) {
     const labelOffset = labelOffsets.get(ref.label);
 
@@ -194,7 +189,6 @@ function parseInstructionLine(
   lineNumber: number,
   originalCode: string
 ): { instruction?: Instruction; error?: ParseError } {
-  // Separar opcode de argumentos
   const firstSpace = line.indexOf(" ");
   const opcode = firstSpace === -1 ? line : line.slice(0, firstSpace);
   const argsText = firstSpace === -1 ? "" : line.slice(firstSpace + 1).trim();
@@ -211,7 +205,6 @@ function parseInstructionLine(
     };
   }
 
-  // Parsear argumentos
   const args: (string | number | null)[] = [];
 
   if (argsText) {
@@ -234,7 +227,6 @@ function parseInstructionLine(
     }
   }
 
-  // Gerar bytes da instrução
   const bytes = generateInstructionBytes(opcodeUpper, args);
 
   return {
@@ -257,12 +249,10 @@ function parseArgument(text: string): {
 
   const upper = text.toUpperCase();
 
-  // Registrador
   if (REGISTER_NAMES.includes(upper)) {
     return { value: upper };
   }
 
-  // Número decimal
   if (/^[0-9]+$/.test(text)) {
     const value = parseInt(text, 10);
     if (value > 0xffff) {
@@ -271,7 +261,6 @@ function parseArgument(text: string): {
     return { value: value & 0xffff };
   }
 
-  // Número hexadecimal (0x...)
   if (/^0x[0-9a-fA-F]+$/.test(text)) {
     const value = parseInt(text, 16);
     if (value > 0xffff) {
@@ -280,7 +269,6 @@ function parseArgument(text: string): {
     return { value: value & 0xffff };
   }
 
-  // Número hexadecimal (... h ou ...H)
   if (/^[0-9a-fA-F]+[hH]$/.test(text)) {
     const value = parseInt(text.slice(0, -1), 16);
     if (value > 0xffff) {
@@ -289,7 +277,6 @@ function parseArgument(text: string): {
     return { value: value & 0xffff };
   }
 
-  // Label ou identificador
   if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(text)) {
     return { value: upper };
   }
@@ -304,10 +291,7 @@ function isValidLabel(name: string): boolean {
   return /^[A-Za-z_][A-Za-z0-9_]*$/.test(name);
 }
 
-/**
- * Gera os bytes reais da instrução (opcode + operandos)
- * Simplificado para as instruções mais comuns
- */
+
 function generateInstructionBytes(
   op: string,
   args: (string | number | null)[]
@@ -346,7 +330,6 @@ function generateInstructionBytes(
           bytes.push(imm & 0xff); // Low byte
           bytes.push((imm >> 8) & 0xff); // High byte
         } else {
-          // Fallback: opcode genérico
           bytes.push(0xb8);
           bytes.push(imm & 0xff);
           bytes.push((imm >> 8) & 0xff);

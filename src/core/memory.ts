@@ -5,7 +5,6 @@
 
 import type { MemoryAccess } from "./types";
 
-// Tamanho da memória: 1MB (modo real x86)
 export const MEMORY_SIZE = 0x100000; // 1MB
 
 /**
@@ -13,12 +12,9 @@ export const MEMORY_SIZE = 0x100000; // 1MB
  * Fórmula: Physical = (Segment * 16) + Offset
  */
 export function physicalAddress(segment: number, offset: number): number {
-  return (segment * 16 + offset) & 0xfffff; 
+  return (segment * 16 + offset) & 0xfffff;
 }
 
-/**
- * Formata cálculo de endereço para visualização
- */
 export function formatAddressCalculation(
   segment: number,
   offset: number
@@ -36,9 +32,6 @@ export function formatAddressCalculation(
     .padStart(5, "0")}`;
 }
 
-/**
- * Classe de Memória com rastreamento de acessos
- */
 export class Memory {
   public data: Uint8Array; // Público para visualização
   public size: number;
@@ -50,9 +43,6 @@ export class Memory {
     this.size = size;
   }
 
-  /**
-   * Lê um byte da memória
-   */
   readByte(address: number): number {
     const addr = address & 0xfffff;
     const value = this.data[addr] ?? 0;
@@ -71,9 +61,6 @@ export class Memory {
     return value;
   }
 
-  /**
-   * Escreve um byte na memória
-   */
   writeByte(address: number, value: number): void {
     const addr = address & 0xfffff;
     const val = value & 0xff;
@@ -92,36 +79,22 @@ export class Memory {
     }
   }
 
-  /**
-   * Lê uma palavra (word - 16 bits) da memória
-   * Little-endian: byte menos significativo primeiro
-   */
   readWord(address: number): number {
     const low = this.readByte(address);
     const high = this.readByte(address + 1);
     return (high << 8) | low;
   }
 
-  /**
-   * Escreve uma palavra (word - 16 bits) na memória
-   * Little-endian: byte menos significativo primeiro
-   */
   writeWord(address: number, value: number): void {
     const val = value & 0xffff;
     this.writeByte(address, val & 0xff);
     this.writeByte(address + 1, (val >> 8) & 0xff);
   }
 
-  /**
-   * Lê diretamente sem rastreamento (útil para debug)
-   */
   peekByte(address: number): number {
     return this.data[address & 0xfffff] ?? 0;
   }
 
-  /**
-   * Lê palavra diretamente sem rastreamento
-   */
   peekWord(address: number): number {
     const addr = address & 0xfffff;
     const low = this.data[addr] ?? 0;
@@ -129,33 +102,21 @@ export class Memory {
     return (high << 8) | low;
   }
 
-  /**
-   * Limpa o log de acessos
-   */
   clearAccessLog(): void {
     this.accessLog = [];
   }
 
-  /**
-   * Reseta a memória
-   */
   reset(): void {
     this.data.fill(0);
     this.accessLog = [];
   }
 
-  /**
-   * Obtém uma visualização da memória em um range
-   */
   getRange(start: number, length: number): Uint8Array {
     const startAddr = start & 0xfffff;
     const endAddr = Math.min(startAddr + length, this.data.length);
     return this.data.slice(startAddr, endAddr);
   }
 
-  /**
-   * Carrega dados em um endereço específico
-   */
   loadData(address: number, data: number[]): void {
     let addr = address & 0xfffff;
     for (const byte of data) {

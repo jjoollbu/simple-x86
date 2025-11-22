@@ -58,9 +58,9 @@ export type FlagName = keyof Flags;
 export interface Instruction {
   op: string;
   args: (string | number | null)[];
-  address?: number; // Endereço físico da instrução
-  bytes: number[]; // Bytes da instrução (opcode + operandos)
-  size: number; // Tamanho em bytes
+  address?: number; 
+  bytes: number[]; 
+  size: number; 
 }
 
 // ============================================================================
@@ -99,7 +99,7 @@ export interface MemoryAccess {
   type: "READ" | "WRITE";
   address: number;
   value: number;
-  size: number; // 1 byte ou 2 bytes (word)
+  size: number; 
 }
 
 // ============================================================================
@@ -138,7 +138,6 @@ export interface ExecutionTrace {
   // Acessos à memória
   memoryAccesses: MemoryAccess[];
 
-  // Descrição detalhada
   description: string;
 }
 
