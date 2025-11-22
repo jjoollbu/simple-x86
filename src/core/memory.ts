@@ -23,7 +23,7 @@ export function formatAddressCalculation(
   return `(${segment
     .toString(16)
     .toUpperCase()
-    .padStart(4, "0")} << 4) + ${offset
+    .padStart(4, "0")} * 16) + ${offset
     .toString(16)
     .toUpperCase()
     .padStart(4, "0")} = ${physical
