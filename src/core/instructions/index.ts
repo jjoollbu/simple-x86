@@ -1,21 +1,40 @@
-/**
- * Instruções x86 - Exportação Centralizada
- * Organização modular por categoria
- */
-
 import { Instruction, CPUState, FlagName } from "../types";
 
+
+type RegisterOrValue = string | number;
+type Operand = string | number | null | undefined;
+
+// Funções de acesso a registradores
+type ReadRegister = (name: RegisterOrValue) => number;
+type WriteRegister = (name: string, value: number) => void;
+
+// Funções de controle de flags
+type UpdateFlags = (value: number, carry?: boolean) => void;
+type MarkRegChanged = (reg: string) => void;
+type MarkFlagChanged = (flag: FlagName) => void;
+
+// Função de controle de fluxo
+type NextIP = () => void;
+
+// Funções de formatação e operandos
+type GetOperandValue = (operand: Operand) => number;
+type FormatOperand = (operand: Operand) => string;
+
+/**
+ * Contexto de execução de instruções
+ * Contém estado e funções auxiliares para executar uma instrução
+ */
 export interface InstructionContext {
   instruction: Instruction;
   state: CPUState;
-  readRegister: (name: string | number) => number;
-  writeRegister: (name: string, value: number) => void;
-  updateFlags: (value: number, carry?: boolean) => void;
-  markRegChanged: (reg: string) => void;
-  markFlagChanged: (flag: FlagName) => void;
-  nextIP: () => void;
-  getOperandValue: (operand: string | number | null | undefined) => number;
-  formatOperand: (operand: string | number | null | undefined) => string;
+  readRegister: ReadRegister;
+  writeRegister: WriteRegister;
+  updateFlags: UpdateFlags;
+  markRegChanged: MarkRegChanged;
+  markFlagChanged: MarkFlagChanged;
+  nextIP: NextIP;
+  getOperandValue: GetOperandValue;
+  formatOperand: FormatOperand;
 }
 
 export * from "./arithmetic";
