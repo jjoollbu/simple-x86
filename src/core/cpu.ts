@@ -18,6 +18,7 @@ import {
   executeInstruction as executeModular,
   InstructionContext,
 } from "./instructions";
+import { cloneState, formatOperand, formatInstruction } from "./utils";
 
 export class CPU implements ICPU {
   public state: CPUState;
@@ -77,7 +78,6 @@ export class CPU implements ICPU {
     const CS = this.state.registers.segment.CS;
 
     for (const instruction of instructions) {
-
       const physAddr = physicalAddress(CS, currentOffset);
 
       this.instructionMap.set(physAddr, instruction);
@@ -214,7 +214,7 @@ export class CPU implements ICPU {
       return null;
     }
 
-    const stateBefore = this.cloneState();
+    const stateBefore = cloneState(this.state);
 
     this.memory.clearAccessLog();
 
@@ -235,7 +235,7 @@ export class CPU implements ICPU {
     // Fase 2: BUS DADOS - Memória envia opcode
     const opcodeByte = instruction.bytes[0] ?? 0;
 
-    const instrText = this.formatInstruction(instruction);
+    const instrText = formatInstruction(instruction);
 
     busOperations.push({
       step: stepCounter++,
@@ -320,7 +320,7 @@ export class CPU implements ICPU {
       description = `ERRO: ${(error as Error).message}`;
     }
 
-    const stateAfter = this.cloneState();
+    const stateAfter = cloneState(this.state);
     this.state.cycles++;
 
     for (const access of this.memory.accessLog) {
@@ -351,7 +351,7 @@ export class CPU implements ICPU {
 
     const trace: ExecutionTrace = {
       instruction,
-      instructionText: this.formatInstruction(instruction),
+      instructionText: formatInstruction(instruction),
       stateBefore,
       stateAfter,
       changedRegisters: Array.from(changedRegs),
@@ -386,7 +386,7 @@ export class CPU implements ICPU {
         changedRegs.add("IP");
       },
       getOperandValue: this.getOperandValue.bind(this),
-      formatOperand: this.formatOperand.bind(this),
+      formatOperand: formatOperand,
     };
 
     // Delegar para o dispatcher modular
@@ -399,29 +399,5 @@ export class CPU implements ICPU {
       this.step();
       steps++;
     }
-  }
-
-  // ============================================================================
-  // UTILITÁRIOS
-  // ============================================================================
-
-  private cloneState(): CPUState {
-    return JSON.parse(JSON.stringify(this.state));
-  }
-
-  private formatOperand(operand: string | number | null | undefined): string {
-    if (operand === null || operand === undefined) return "null";
-    if (typeof operand === "number") {
-      return `0x${operand.toString(16).toUpperCase()}`;
-    }
-    return operand;
-  }
-
-  private formatInstruction(instr: Instruction): string {
-    const args = instr.args
-      .filter((a) => a !== null && a !== undefined)
-      .map((a) => this.formatOperand(a))
-      .join(", ");
-    return `${instr.op}${args ? " " + args : ""}`;
   }
 }
