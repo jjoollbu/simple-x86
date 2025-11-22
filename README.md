@@ -56,7 +56,7 @@ Transporta endereços de memória do processador para a memória.
 - Largura: 20 bits (modo real)
 - Direção: CPU → Memória
 - Capacidade: 1 MB (2^20 bytes)
-- Cálculo: Endereço Físico = (Segmento << 4) + Offset
+- Cálculo: Endereço Físico = (Segmento * 16) + Offset
 
 **Exemplo:**
 
