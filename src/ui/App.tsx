@@ -179,20 +179,20 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6" data-render={renderTick}>
+    <div className="min-h-screen bg-slate-800 p-6" data-render={renderTick}>
       <div className="max-w-7xl mx-auto">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+          <h1 className="text-3xl font-bold text-slate-100 mb-2">
             Simulador x86 - Modo Real
           </h1>
-          <p className="text-gray-600">
+          <p className="text-slate-200">
             Simulador de execução de instruções assembly com visualização em
             tempo real
           </p>
         </header>
 
         {errors.length > 0 && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+          <div className="bg-slate-900 border border-slate-700 text-white px-4 py-3 rounded mb-6">
             {errors.map((err, idx) => (
               <div key={idx}>
                 Linha {err.line}: {err.message}

@@ -70,7 +70,7 @@ export function CPUView({ cpu, highlightedRegisters }: CPUViewProps) {
             <div
               key={name}
               className={`flex justify-between items-center p-2 rounded ${
-                isHighlighted ? "bg-yellow-200 text-yellow-900" : "bg-gray-50"
+                isHighlighted ? "bg-slate-200 text-slate-900" : "bg-slate-50"
               }`}
             >
               <span className="font-mono font-semibold">{name}:</span>
@@ -84,19 +84,19 @@ export function CPUView({ cpu, highlightedRegisters }: CPUViewProps) {
                       if (e.key === "Enter") handleSaveEdit(name, type);
                       if (e.key === "Escape") handleCancelEdit();
                     }}
-                    className="w-20 px-1 py-0.5 text-sm font-mono border border-blue-400 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-20 px-1 py-0.5 text-sm font-mono border border-slate-400 rounded focus:outline-none focus:ring-1 focus:ring-slate-500"
                     autoFocus
                     placeholder="FFFF"
                   />
                   <button
                     onClick={() => handleSaveEdit(name, type)}
-                    className="px-1 py-0.5 text-xs bg-green-500 text-white rounded hover:bg-green-600"
+                    className="px-1 py-0.5 text-xs bg-white text-slate-900 border border-slate-300 rounded hover:bg-slate-100"
                   >
                     ✓
                   </button>
                   <button
                     onClick={handleCancelEdit}
-                    className="px-1 py-0.5 text-xs bg-red-500 text-white rounded hover:bg-red-600"
+                    className="px-1 py-0.5 text-xs bg-slate-900 text-white rounded hover:bg-slate-800"
                   >
                     ✗
                   </button>
@@ -104,8 +104,8 @@ export function CPUView({ cpu, highlightedRegisters }: CPUViewProps) {
               ) : (
                 <span
                   className={
-                    "font-mono cursor-pointer hover:bg-blue-100 px-2 py-1 rounded " +
-                    (isHighlighted ? "font-bold" : "text-blue-600")
+                    "font-mono cursor-pointer hover:bg-slate-100 px-2 py-1 rounded " +
+                    (isHighlighted ? "font-bold" : "text-slate-700")
                   }
                   onClick={() => handleStartEdit(name, value)}
                   title="Clique para editar"
@@ -128,7 +128,9 @@ export function CPUView({ cpu, highlightedRegisters }: CPUViewProps) {
           <div
             key={flag}
             className={`flex justify-between items-center p-2 rounded ${
-              value ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+              value
+                ? "bg-white text-slate-900 border border-slate-300"
+                : "bg-slate-900 text-white"
             }`}
           >
             <span className="font-mono font-semibold">{flag}:</span>
@@ -182,14 +184,14 @@ export function CPUView({ cpu, highlightedRegisters }: CPUViewProps) {
         />
         <FlagsView flags={state.flags} />
 
-        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+        <div className="mt-4 p-3 bg-slate-50 border border-slate-200 rounded">
           <div className="flex justify-between items-center">
             <span className="font-semibold">Estado:</span>
             <span
               className={`px-2 py-1 rounded text-sm ${
                 state.halted
-                  ? "bg-red-100 text-red-800"
-                  : "bg-green-100 text-green-800"
+                  ? "bg-slate-900 text-white"
+                  : "bg-white text-slate-900 border border-slate-300"
               }`}
             >
               {state.halted ? "PARADO" : "EXECUTANDO"}

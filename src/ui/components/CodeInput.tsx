@@ -25,13 +25,13 @@ export function CodeInput({
           value={code}
           onChange={(e) => onChange(e.target.value)}
           placeholder={`; Digite seu código assembly aqui\n; Exemplo:\nMOV AX, 1234H\nMOV BX, AX\nADD AX, BX`}
-          className="w-full h-64 p-4 border border-gray-300 rounded-md font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full h-64 p-4 border-2 border-slate-300 rounded-md font-mono text-sm focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
           disabled={disabled}
         />
         <button
           onClick={onLoad}
           disabled={disabled || !code.trim()}
-          className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="bg-slate-900 text-white px-6 py-2 rounded-md hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:bg-slate-400 disabled:cursor-not-allowed"
         >
           Carregar Código
         </button>

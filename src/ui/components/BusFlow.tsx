@@ -38,13 +38,13 @@ export function BusFlow({ operations }: BusFlowProps) {
                 {op.type === "INSTRUÇÃO" ? (
                   <div className="bg-linear-to-r from-purple-100 to-purple-50 border-2 border-purple-400 rounded-lg p-4 mb-3">
                     <div className="text-center">
-                      <div className="text-sm font-semibold text-purple-800 mb-1">
+                      <div className="text-sm font-semibold text-slate-800 mb-1">
                         📋 INSTRUÇÃO EXECUTADA
                       </div>
-                      <div className="text-2xl font-bold text-purple-900 font-mono mb-2">
+                      <div className="text-2xl font-bold text-slate-900 font-mono mb-2">
                         {op.data}
                       </div>
-                      <div className="text-xs text-purple-600 italic">
+                      <div className="text-xs text-slate-600 italic">
                         {op.description}
                       </div>
                     </div>
@@ -53,7 +53,7 @@ export function BusFlow({ operations }: BusFlowProps) {
                   <>
                     <div className="flex items-center py-3">
                       <div className="w-8 shrink-0">
-                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-900 text-white text-xs font-bold">
                           {op.step}
                         </span>
                       </div>
@@ -82,8 +82,8 @@ export function BusFlow({ operations }: BusFlowProps) {
                             <span
                               className={`text-xs font-semibold px-2 py-1 rounded ${
                                 op.type === "BUS END"
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-blue-100 text-blue-800"
+                                  ? "bg-white text-slate-900 border border-slate-300"
+                                  : "bg-slate-200 text-slate-900"
                               }`}
                             >
                               {op.type}
@@ -157,11 +157,11 @@ export function BusFlow({ operations }: BusFlowProps) {
         <h4 className="text-sm font-semibold text-gray-700 mb-2">Legenda:</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-600">
           <div>
-            <span className="font-semibold text-green-600">BUS END:</span>{" "}
+            <span className="font-semibold text-slate-600">BUS END:</span>{" "}
             Barramento de endereços (sempre CPU → Memória)
           </div>
           <div>
-            <span className="font-semibold text-blue-600">BUS DADOS:</span>{" "}
+            <span className="font-semibold text-slate-600">BUS DADOS:</span>{" "}
             Barramento de dados (→ WRITE / ← READ)
           </div>
         </div>

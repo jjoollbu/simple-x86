@@ -56,7 +56,7 @@ export function ExecutionTrace({ cpu }: ExecutionTraceProps) {
                     {trace.addressCalculations.map((calc, idx) => (
                       <div
                         key={idx}
-                        className="font-mono text-xl bg-purple-50 text-gray-900 px-3 py-2 rounded border border-purple-200"
+                        className="font-mono text-xl bg-slate-50 text-slate-900 px-3 py-2 rounded border border-slate-300"
                       >
                         {calc.formula}
                       </div>

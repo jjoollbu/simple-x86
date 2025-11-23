@@ -23,25 +23,25 @@ export function Controls({
         <button
           onClick={onStep}
           disabled={disabled || isHalted}
-          className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed font-semibold"
+          className="w-full bg-slate-900 text-white py-3 px-4 rounded-md hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:bg-slate-400 disabled:cursor-not-allowed font-semibold"
         >
           Executar Passo
         </button>
 
         <button
           onClick={onReset}
-          className="w-full bg-gray-600 text-white py-3 px-4 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed font-semibold"
+          className="w-full bg-white text-slate-900 border-2 border-slate-900 py-3 px-4 rounded-md hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:bg-slate-200 disabled:cursor-not-allowed font-semibold"
         >
           Resetar CPU
         </button>
 
-        <div className="pt-4 border-t border-gray-200">
-          <div className="text-sm text-gray-600 space-y-1">
+        <div className="pt-4 border-t border-slate-200">
+          <div className="text-sm text-slate-600 space-y-1">
             <div className="flex justify-between">
               <span>Estado:</span>
               <span
                 className={`font-semibold ${
-                  isHalted ? "text-red-600" : "text-green-600"
+                  isHalted ? "text-slate-900" : "text-slate-700"
                 }`}
               >
                 {isHalted ? "Parado" : "Pronto"}

@@ -107,7 +107,7 @@ export function MemoryView({ cpu, highlightedAddresses }: MemoryViewProps) {
               key={rowIndex}
               className="flex items-center py-1 hover:bg-gray-50"
             >
-              <div className="w-20 text-blue-600 font-semibold">
+              <div className="w-20 text-slate-700 font-semibold">
                 {formatHex(row.startAddr, 5)}
               </div>
               <div className="flex-1 grid grid-cols-16 gap-1">
@@ -121,10 +121,10 @@ export function MemoryView({ cpu, highlightedAddresses }: MemoryViewProps) {
                       key={col}
                       className={`text-center px-1 py-0.5 rounded ${
                         isEmpty
-                          ? "text-gray-300"
+                          ? "text-slate-300"
                           : isHighlighted
-                          ? "bg-yellow-200 text-yellow-800 font-bold"
-                          : "text-gray-700"
+                          ? "bg-slate-200 text-slate-900 font-bold border border-slate-400"
+                          : "text-slate-700"
                       }`}
                       title={
                         isEmpty
