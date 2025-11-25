@@ -1,7 +1,4 @@
-/**
- * Utilitário para formatar operandos de instruções
- */
-
+// formata operandos pra mostrar na interface
 
 export function formatOperand(
   operand: string | number | null | undefined
