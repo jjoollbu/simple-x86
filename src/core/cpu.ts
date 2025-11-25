@@ -1,7 +1,4 @@
-/**
- * CPU x86 Simplificada - Modo Real
- * Implementa execução passo a passo com trace detalhado de barramentos e memória
- */
+// CPU x86 simplificada - modo real 16-bit
 
 import type {
   CPUState,
@@ -33,6 +30,8 @@ export class CPU implements ICPU {
   }
 
   private createInitialState(): CPUState {
+    // inicializa registradores com valores padrão
+    // SP começa no topo da stack (0xFFFE)
     return {
       registers: {
         general: {
@@ -42,7 +41,7 @@ export class CPU implements ICPU {
           DX: 0,
         },
         pointer: {
-          SP: 0xfffe,
+          SP: 0xfffe, // stack pointer no topo
           BP: 0,
           SI: 0,
           DI: 0,
@@ -77,6 +76,7 @@ export class CPU implements ICPU {
     let currentOffset = 0;
     const CS = this.state.registers.segment.CS;
 
+    // carrega cada instrução na memória
     for (const instruction of instructions) {
       const physAddr = physicalAddress(CS, currentOffset);
 
@@ -84,6 +84,7 @@ export class CPU implements ICPU {
 
       instruction.address = physAddr;
 
+      // escreve os bytes da instrução na memória
       for (let i = 0; i < instruction.bytes.length; i++) {
         const byte = instruction.bytes[i];
         if (byte !== undefined) {
@@ -93,17 +94,19 @@ export class CPU implements ICPU {
 
       currentOffset += instruction.size;
     }
+
+    // debug: mostra quantas instruções foram carregadas
+    // console.log(`Loaded ${instructions.length} instructions`);
   }
 
-  // ============================================================================
-  // ACESSO A REGISTRADORES
-  // ============================================================================
+  // acesso aos registradores da CPU
 
   private readRegister(name: string | number): number {
     if (typeof name === "number") return name & 0xffff;
 
     const { general, pointer, segment, IP } = this.state.registers;
 
+    // checa em qual grupo o registrador está
     if (name in general) return general[name as keyof typeof general] & 0xffff;
     if (name in pointer) return pointer[name as keyof typeof pointer] & 0xffff;
     if (name in segment) return segment[name as keyof typeof segment] & 0xffff;
@@ -113,7 +116,7 @@ export class CPU implements ICPU {
   }
 
   private writeRegister(name: string, value: number): void {
-    const val = value & 0xffff;
+    const val = value & 0xffff; // garante 16 bits
     const { general, pointer, segment } = this.state.registers;
 
     if (name in general) {
@@ -156,26 +159,23 @@ export class CPU implements ICPU {
     this.memory.writeWord(address, value);
   }
 
-  // ============================================================================
-  // FLAGS
-  // ============================================================================
+  // atualiza as flags da CPU baseado no resultado
 
   private updateFlags(value: number, carry?: boolean): void {
     const val = value & 0xffff;
-    this.state.flags.ZF = val === 0;
-    this.state.flags.SF = (val & 0x8000) !== 0;
+    this.state.flags.ZF = val === 0; // zero flag
+    this.state.flags.SF = (val & 0x8000) !== 0; // sign flag (bit 15)
     if (carry !== undefined) {
       this.state.flags.CF = carry;
     }
+    // TODO: implementar overflow flag corretamente
   }
 
-  // ============================================================================
-  // STACK
-  // ============================================================================
+  // operações de stack (cresce pra baixo)
 
   private push(value: number): void {
     const sp = this.state.registers.pointer.SP;
-    const newSP = (sp - 2) & 0xffff;
+    const newSP = (sp - 2) & 0xffff; // decrementa 2 bytes (16 bits)
     this.state.registers.pointer.SP = newSP;
 
     const physical = physicalAddress(this.state.registers.segment.SS, newSP);
@@ -187,7 +187,7 @@ export class CPU implements ICPU {
     const physical = physicalAddress(this.state.registers.segment.SS, sp);
     const value = this.getMemoryWord(physical);
 
-    this.state.registers.pointer.SP = (sp + 2) & 0xffff;
+    this.state.registers.pointer.SP = (sp + 2) & 0xffff; // incrementa após ler
     return value;
   }
 
@@ -200,6 +200,7 @@ export class CPU implements ICPU {
     return this.readRegister(operand);
   }
 
+  // executa um passo (uma instrução)
   public step(): ExecutionTrace | null {
     if (this.state.halted) return null;
 
@@ -210,6 +211,7 @@ export class CPU implements ICPU {
 
     const instruction = this.instructionMap.get(fetchAddr);
     if (!instruction) {
+      // não achou instrução nesse endereço, para o programa
       this.state.halted = true;
       return null;
     }
@@ -222,7 +224,7 @@ export class CPU implements ICPU {
     const addressCalculations: AddressCalculation[] = [];
     let stepCounter = 1;
 
-    // Fase 1: BUS END - CPU envia endereço do opcode
+    // Fase 1: CPU envia endereço do opcode no barramento
     busOperations.push({
       step: stepCounter++,
       type: "FETCH",
@@ -232,7 +234,7 @@ export class CPU implements ICPU {
       direction: "→",
     });
 
-    // Fase 2: BUS DADOS - Memória envia opcode
+    // Fase 2: Memória responde com o opcode
     const opcodeByte = instruction.bytes[0] ?? 0;
 
     const instrText = formatInstruction(instruction);
@@ -261,17 +263,16 @@ export class CPU implements ICPU {
       ).toUpperCase()} = 0x${fetchAddr.toString(16).toUpperCase()}`,
     });
 
-    // Se a instrução tem operandos imediatos (ex: MOV AX, 1111h), buscar da memória
+    // se tem operandos imediatos (tipo MOV AX, 0x1234), busca eles também
     if (instruction.size > 1) {
-      // Endereço do operando imediato
       const operandAddr = fetchAddr + 1;
 
-      // Ler palavra de 16 bits (low byte + high byte)
+      // lê palavra de 16 bits (2 bytes)
       const lowByte = instruction.bytes[1] ?? 0;
       const highByte = instruction.bytes[2] ?? 0;
       const operandValue = lowByte | (highByte << 8);
 
-      // BUS END - CPU busca operando
+      // busca operando do barramento de endereço
       busOperations.push({
         step: stepCounter++,
         type: "FETCH",
@@ -281,7 +282,7 @@ export class CPU implements ICPU {
         direction: "→",
       });
 
-      // BUS DADOS - Memória envia operando
+      // memória retorna operando
       busOperations.push({
         step: stepCounter++,
         type: "FETCH",
