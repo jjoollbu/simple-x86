@@ -1,7 +1,5 @@
-/**
- * Componente de Visualização da CPU
- * Mostra os valores de todos os registradores com edição inline
- */
+// componente que mostra os registradores da CPU
+// permite editar valores clicando neles
 
 import { useState } from "react";
 import type { CPU } from "../../core/cpu";
@@ -30,19 +28,20 @@ export function CPUView({ cpu, highlightedRegisters }: CPUViewProps) {
     name: string,
     type: "general" | "pointer" | "segment" | "IP"
   ) => {
-    const parsedValue = parseInt(editValue, 16);
-    if (!isNaN(parsedValue) && parsedValue >= 0 && parsedValue <= 0xffff) {
+    const val = parseInt(editValue, 16);
+    if (!isNaN(val) && val >= 0 && val <= 0xffff) {
+      // atualiza o registrador dependendo do tipo
       if (type === "general") {
         state.registers.general[name as keyof typeof state.registers.general] =
-          parsedValue;
+          val;
       } else if (type === "pointer") {
         state.registers.pointer[name as keyof typeof state.registers.pointer] =
-          parsedValue;
+          val;
       } else if (type === "segment") {
         state.registers.segment[name as keyof typeof state.registers.segment] =
-          parsedValue;
+          val;
       } else if (type === "IP") {
-        state.registers.IP = parsedValue;
+        state.registers.IP = val;
       }
     }
     setEditingRegister(null);
