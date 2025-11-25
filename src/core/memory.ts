@@ -1,18 +1,13 @@
-/**
- * Sistema de Memória para Simulador x86 (Modo Real)
- * Implementa mapeamento de memória e rastreamento de acessos
- */
+// sistema de memória pra o simulador x86
+// modo real = 1MB de RAM (20 bits de endereço)
 
 import type { MemoryAccess } from "./types";
 
 export const MEMORY_SIZE = 0x100000; // 1MB
 
-/**
- * Calcula endereço físico a partir de segmento e offset
- * Fórmula: Physical = (Segment * 16) + Offset
- */
+// calcula endereço físico: (segmento * 16) + offset
 export function physicalAddress(segment: number, offset: number): number {
-  return (segment * 16 + offset) & 0xfffff;
+  return (segment * 16 + offset) & 0xfffff; // mask 20 bits
 }
 
 export function formatAddressCalculation(
@@ -44,9 +39,10 @@ export class Memory {
   }
 
   readByte(address: number): number {
-    const addr = address & 0xfffff;
+    const addr = address & 0xfffff; // garante 20 bits
     const value = this.data[addr] ?? 0;
 
+    // log de acesso pra debug
     this.accessLog.push({
       type: "READ",
       address: addr,
@@ -55,7 +51,7 @@ export class Memory {
     });
 
     if (this.accessLog.length > this.maxLogSize) {
-      this.accessLog.shift();
+      this.accessLog.shift(); // remove o mais antigo
     }
 
     return value;
@@ -63,7 +59,7 @@ export class Memory {
 
   writeByte(address: number, value: number): void {
     const addr = address & 0xfffff;
-    const val = value & 0xff;
+    const val = value & 0xff; // 8 bits
 
     this.data[addr] = val;
 
