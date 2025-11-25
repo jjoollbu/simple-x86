@@ -1,7 +1,4 @@
-/**
- * Instruções Lógicas
- * AND, OR, XOR, NOT, CMP
- */
+// instruções lógicas bitwise
 
 import { InstructionContext } from ".";
 
@@ -9,8 +6,8 @@ export function executeAND(ctx: InstructionContext): string {
   const { instruction } = ctx;
   const dst = instruction.args[0] as string;
   const src = instruction.args[1];
-  const result = ctx.readRegister(dst) & ctx.getOperandValue(src);
-  const final = result & 0xffff;
+  const val = ctx.readRegister(dst) & ctx.getOperandValue(src);
+  const final = val & 0xffff;
 
   ctx.writeRegister(dst, final);
   ctx.updateFlags(final, false);
@@ -86,9 +83,9 @@ export function executeCMP(ctx: InstructionContext): string {
   const op2 = instruction.args[1];
   const v1 = ctx.getOperandValue(op1);
   const v2 = ctx.getOperandValue(op2);
-  const result = v1 - v2;
+  const res = v1 - v2; // subtração sem guardar o resultado
 
-  ctx.updateFlags(result & 0xffff, result < 0);
+  ctx.updateFlags(res & 0xffff, res < 0);
 
   ctx.markFlagChanged("ZF");
   ctx.markFlagChanged("SF");
