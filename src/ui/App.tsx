@@ -1,7 +1,4 @@
-/**
- * Aplicação Principal - Simulador x86 em Modo Real
- * Versão Simplificada e Organizada
- */
+// App principal do simulador x86
 
 import { useState } from "react";
 import { CPU } from "../core/cpu";
@@ -40,34 +37,26 @@ HLT            ; Para a execução`;
 export function App() {
   const [cpu] = useState(() => new CPU());
   const [code, setCode] = useState(DEFAULT_CODE);
-  const [errors, setErrors] = useState<ParseError[]>([]);
-  const [renderTick, setRenderTick] = useState(0);
-  const [highlightedRegisters, setHighlightedRegisters] = useState<Set<string>>(
-    new Set()
-  );
-  const [currentBusOps, setCurrentBusOps] = useState<BusFlowOperation[]>([]);
-  const [memoryHighlights, setMemoryHighlights] = useState<Set<number>>(
-    new Set()
-  );
+  const [uiState, setUiState] = useState({
+    errors: [] as ParseError[],
+    highlightedRegisters: new Set<string>(),
+    currentBusOps: [] as BusFlowOperation[],
+    memoryHighlights: new Set<number>(),
+    isHalted: false,
+  });
 
-  const forceUpdate = () => setRenderTick((t) => t + 1);
-
-  const handleLoad = () => {
+  const loadCodeIntoMemory = () => {
     try {
-      setErrors([]);
-      setCurrentBusOps([]);
-      setHighlightedRegisters(new Set());
-      setMemoryHighlights(new Set());
-
       const parseResult = parseAssembly(code);
 
       if (parseResult.errors.length > 0) {
-        setErrors(parseResult.errors);
+        setUiState((s) => ({ ...s, errors: parseResult.errors }));
         return;
       }
 
       cpu.loadProgram(parseResult.instructions);
 
+      // marca os endereços das instruções na memória pra destacar
       const instructionAddresses = new Set<number>();
       parseResult.instructions.forEach((instr) => {
         if (instr.address !== undefined) {
@@ -76,44 +65,53 @@ export function App() {
           }
         }
       });
-      setMemoryHighlights(instructionAddresses);
 
-      forceUpdate();
+      setUiState({
+        errors: [],
+        currentBusOps: [],
+        highlightedRegisters: new Set(),
+        memoryHighlights: instructionAddresses,
+        isHalted: cpu.state.halted,
+      });
 
-      console.log("✅ Programa carregado com sucesso!");
-      console.log(`📊 ${parseResult.instructions.length} instruções`);
+      console.log(
+        `Loaded ${parseResult.instructions.length} instructions into memory`
+      );
     } catch (error) {
-      setErrors([
-        {
-          line: 0,
-          message: `Erro ao carregar: ${(error as Error).message}`,
-          code: "",
-        },
-      ]);
+      setUiState((s) => ({
+        ...s,
+        errors: [
+          {
+            line: 0,
+            message: `Erro ao carregar: ${(error as Error).message}`,
+            code: "",
+          },
+        ],
+      }));
     }
   };
 
-  const handleStep = () => {
+  const executeSingleStep = () => {
     if (cpu.state.halted) return;
 
     try {
       const trace = cpu.step();
 
       if (trace) {
+        // pega registradores e flags que mudaram
         const changedRegs = new Set([
           ...trace.changedRegisters,
           ...trace.changedFlags,
         ]);
-        setHighlightedRegisters(changedRegs);
 
         const busOps: BusFlowOperation[] = [];
+        let step = 1;
 
-        let stepCounter = 1;
-
+        // monta lista de operações do barramento pra exibir
         trace.busOperations.forEach((op) => {
           if (op.busType === "ADDRESS") {
             busOps.push({
-              step: stepCounter++,
+              step: step++,
               address: `0x${op.address
                 .toString(16)
                 .toUpperCase()
@@ -125,7 +123,7 @@ export function App() {
             });
           } else if (op.busType === "DATA") {
             busOps.push({
-              step: stepCounter++,
+              step: step++,
               address: "",
               data:
                 op.data !== undefined
@@ -138,48 +136,54 @@ export function App() {
           }
         });
 
-        setCurrentBusOps(busOps);
-
         const memAddrs = new Set<number>();
-
         if (trace.instruction.address !== undefined) {
           for (let i = 0; i < trace.instruction.size; i++) {
             memAddrs.add(trace.instruction.address + i);
           }
         }
-
         trace.memoryAccesses.forEach((access) => {
           memAddrs.add(access.address);
         });
 
-        setMemoryHighlights(memAddrs);
+        setUiState((s) => ({
+          ...s,
+          highlightedRegisters: changedRegs,
+          currentBusOps: busOps,
+          memoryHighlights: memAddrs,
+          isHalted: cpu.state.halted,
+        }));
 
         console.log("▶️ Step executado:", trace.instructionText);
         console.log("   Descrição:", trace.description);
+      } else {
+        // Se não houver trace, apenas atualiza o estado de halted
+        setUiState((s) => ({ ...s, isHalted: cpu.state.halted }));
       }
-
-      forceUpdate();
     } catch (error) {
       console.error("❌ Erro na execução:", error);
       cpu.state.halted = true;
-      forceUpdate();
+      setUiState((s) => ({ ...s, isHalted: true }));
     }
   };
 
-  const handleReset = () => {
+  const resetSystem = () => {
     cpu.reset();
     if (cpu.program.length > 0) {
       cpu.loadProgram(cpu.program);
     }
-    setCurrentBusOps([]);
-    setHighlightedRegisters(new Set());
-    setMemoryHighlights(new Set());
-    forceUpdate();
+    setUiState({
+      errors: [],
+      currentBusOps: [],
+      highlightedRegisters: new Set(),
+      memoryHighlights: new Set(),
+      isHalted: cpu.state.halted,
+    });
     console.log("🔄 CPU resetada");
   };
 
   return (
-    <div className="min-h-screen bg-slate-800 p-6" data-render={renderTick}>
+    <div className="min-h-screen bg-slate-800 p-6">
       <div className="max-w-7xl mx-auto">
         <header className="mb-8">
           <h1 className="text-3xl font-bold text-slate-100 mb-2">
@@ -191,9 +195,9 @@ export function App() {
           </p>
         </header>
 
-        {errors.length > 0 && (
+        {uiState.errors.length > 0 && (
           <div className="bg-slate-900 border border-slate-700 text-white px-4 py-3 rounded mb-6">
-            {errors.map((err, idx) => (
+            {uiState.errors.map((err, idx) => (
               <div key={idx}>
                 Linha {err.line}: {err.message}
               </div>
@@ -206,30 +210,36 @@ export function App() {
             <CodeInput
               code={code}
               onChange={setCode}
-              onLoad={handleLoad}
+              onLoad={loadCodeIntoMemory}
               disabled={false}
             />
 
             <Controls
-              onStep={handleStep}
-              onReset={handleReset}
-              isHalted={cpu.state.halted}
+              onStep={executeSingleStep}
+              onReset={resetSystem}
+              isHalted={uiState.isHalted}
               disabled={!code.trim()}
             />
           </div>
 
           <div>
-            <BusFlow operations={currentBusOps} />
+            <BusFlow operations={uiState.currentBusOps} />
           </div>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
           <div className="xl:col-span-1">
-            <CPUView cpu={cpu} highlightedRegisters={highlightedRegisters} />
+            <CPUView
+              cpu={cpu}
+              highlightedRegisters={uiState.highlightedRegisters}
+            />
           </div>
 
           <div className="xl:col-span-2">
-            <MemoryView cpu={cpu} highlightedAddresses={memoryHighlights} />
+            <MemoryView
+              cpu={cpu}
+              highlightedAddresses={uiState.memoryHighlights}
+            />
           </div>
         </div>
 
