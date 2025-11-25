@@ -1,24 +1,41 @@
-// instruções aritméticas básicas
-// ADD, SUB, INC, DEC, MUL, DIV, NEG
+// instruções aritméticas 
+// add, sub, inc, dec, mul, div, neg
 
 import { InstructionContext } from ".";
 
 export function executeADD(ctx: InstructionContext): string {
   const { instruction } = ctx;
+
+  // o destino SEMPRE é um registrador
   const dst = instruction.args[0] as string;
+
+  // a origem pode ser registrador, literal ou memória
   const src = instruction.args[1];
+
+  // pega o valor atual do destino e da origem
   const v1 = ctx.readRegister(dst);
   const v2 = ctx.getOperandValue(src);
-  const result = v1 + v2;
-  const final = result & 0xffff; // mask pra 16 bits
 
+  // operação de soma, v1 sendo dst e v2 sendo src
+  const result = v1 + v2;
+
+  // mascara pra 16 bits
+  const final = result & 0xffff;
+
+  // grava o resultado de volta no registrador
   ctx.writeRegister(dst, final);
+
+  // atualiza flags — o segundo parâmetro indica overflow
   ctx.updateFlags(final, result > 0xffff);
 
+  // marca no simulador que o registrador mudou
   ctx.markRegChanged(dst);
+
+  // as flags que podem ter mudado nessa instrução
   ctx.markFlagChanged("ZF");
   ctx.markFlagChanged("SF");
   ctx.markFlagChanged("CF");
+
   ctx.nextIP();
 
   return `ADD ${dst}, ${ctx.formatOperand(src)} → ${dst} = 0x${final
@@ -30,18 +47,25 @@ export function executeSUB(ctx: InstructionContext): string {
   const { instruction } = ctx;
   const dst = instruction.args[0] as string;
   const src = instruction.args[1];
+
+  // pega os operandos
   const v1 = ctx.readRegister(dst);
   const v2 = ctx.getOperandValue(src);
+
+  // subtração
   const result = v1 - v2;
+
   const final = result & 0xffff;
 
   ctx.writeRegister(dst, final);
+
   ctx.updateFlags(final, result < 0);
 
   ctx.markRegChanged(dst);
   ctx.markFlagChanged("ZF");
   ctx.markFlagChanged("SF");
   ctx.markFlagChanged("CF");
+
   ctx.nextIP();
 
   return `SUB ${dst}, ${ctx.formatOperand(src)} → ${dst} = 0x${final
@@ -52,14 +76,18 @@ export function executeSUB(ctx: InstructionContext): string {
 export function executeINC(ctx: InstructionContext): string {
   const { instruction } = ctx;
   const reg = instruction.args[0] as string;
+
+  // incremento simples
   const value = (ctx.readRegister(reg) + 1) & 0xffff;
 
   ctx.writeRegister(reg, value);
+
   ctx.updateFlags(value);
 
   ctx.markRegChanged(reg);
   ctx.markFlagChanged("ZF");
   ctx.markFlagChanged("SF");
+
   ctx.nextIP();
 
   return `INC ${reg} → ${reg} = 0x${value.toString(16).toUpperCase()}`;
@@ -68,6 +96,8 @@ export function executeINC(ctx: InstructionContext): string {
 export function executeDEC(ctx: InstructionContext): string {
   const { instruction } = ctx;
   const reg = instruction.args[0] as string;
+
+  // decrementar
   const value = (ctx.readRegister(reg) - 1) & 0xffff;
 
   ctx.writeRegister(reg, value);
@@ -76,6 +106,7 @@ export function executeDEC(ctx: InstructionContext): string {
   ctx.markRegChanged(reg);
   ctx.markFlagChanged("ZF");
   ctx.markFlagChanged("SF");
+
   ctx.nextIP();
 
   return `DEC ${reg} → ${reg} = 0x${value.toString(16).toUpperCase()}`;
@@ -84,19 +115,25 @@ export function executeDEC(ctx: InstructionContext): string {
 export function executeMUL(ctx: InstructionContext): string {
   const { instruction } = ctx;
   const src = instruction.args[0];
+
+  // pega AX como acumulador 
   const ax = ctx.readRegister("AX");
   const value = ctx.getOperandValue(src);
+
   const result = ax * value;
 
+  // guarda a parte baixa em AX e alta em DX
   ctx.writeRegister("AX", result & 0xffff);
   ctx.writeRegister("DX", (result >> 16) & 0xffff);
 
+  // atualiza flags 
   ctx.updateFlags(result & 0xffff, result > 0xffff);
 
   ctx.markRegChanged("AX");
   ctx.markRegChanged("DX");
   ctx.markFlagChanged("CF");
   ctx.markFlagChanged("OF");
+
   ctx.nextIP();
 
   return `MUL ${ctx.formatOperand(src)} → AX:DX = 0x${result
@@ -109,16 +146,20 @@ export function executeDIV(ctx: InstructionContext): string {
   const src = instruction.args[0];
   const divisor = ctx.getOperandValue(src);
 
-
+  // divisão por zero -> erro imediato
   if (divisor === 0) {
     throw new Error("Divisão por zero");
   }
 
   const ax = ctx.readRegister("AX");
   const dx = ctx.readRegister("DX");
+
   const dividend = (dx << 16) | ax;
 
+  // quociente vai para AX
   const quotient = Math.floor(dividend / divisor) & 0xffff;
+
+  // resto vai para DX
   const remainder = dividend % divisor & 0xffff;
 
   ctx.writeRegister("AX", quotient);
@@ -126,6 +167,7 @@ export function executeDIV(ctx: InstructionContext): string {
 
   ctx.markRegChanged("AX");
   ctx.markRegChanged("DX");
+
   ctx.nextIP();
 
   return `DIV ${ctx.formatOperand(src)} → AX = 0x${quotient
@@ -136,14 +178,19 @@ export function executeDIV(ctx: InstructionContext): string {
 export function executeNEG(ctx: InstructionContext): string {
   const { instruction } = ctx;
   const reg = instruction.args[0] as string;
+
+  // pega o valor do registrador e faz negação aritmética (valor * -1)
   const value = -ctx.readRegister(reg) & 0xffff;
 
   ctx.writeRegister(reg, value);
+
+  // atualiza flags
   ctx.updateFlags(value);
 
   ctx.markRegChanged(reg);
   ctx.markFlagChanged("ZF");
   ctx.markFlagChanged("SF");
+
   ctx.nextIP();
 
   return `NEG ${reg} → ${reg} = 0x${value.toString(16).toUpperCase()}`;

@@ -1,6 +1,5 @@
 /**
  * Tipos para o Simulador x86 em Modo Real
- * Versão organizada com foco em didática e visualização
  */
 
 // ============================================================================
@@ -58,9 +57,9 @@ export type FlagName = keyof Flags;
 export interface Instruction {
   op: string;
   args: (string | number | null)[];
-  address?: number; 
-  bytes: number[]; 
-  size: number; 
+  address?: number;
+  bytes: number[];
+  size: number;
 }
 
 // ============================================================================
@@ -99,7 +98,7 @@ export interface MemoryAccess {
   type: "READ" | "WRITE";
   address: number;
   value: number;
-  size: number; 
+  size: number;
 }
 
 // ============================================================================

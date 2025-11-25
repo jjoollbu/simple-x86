@@ -23,6 +23,7 @@ type FormatOperand = (operand: Operand) => string;
 /**
  * Contexto de execução de instruções
  * Contém estado e funções auxiliares para executar uma instrução
+ * a lógica(contexto nmrl) se repetirá em todas as instruções, mantendo tudo padronizado
  */
 export interface InstructionContext {
   instruction: Instruction;
