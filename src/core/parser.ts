@@ -1,8 +1,7 @@
-// Parser básico de assembly x86
-// suporta instruções básicas, labels e comentários
-
+// parser pra assembly x86 simples
 import type { ParseResult, ParseError, Instruction } from "./types";
 
+// lista de registradores suportados
 const REGISTER_NAMES = [
   "AX",
   "BX",
@@ -24,17 +23,15 @@ const REGISTER_NAMES = [
   "CL",
   "CH",
   "DL",
-  "DH", // Registradores de 8 bits
+  "DH",
 ];
 
+// instruções que a gente suporta
 const VALID_INSTRUCTIONS = [
-  // Transferência de dados
   "MOV",
   "PUSH",
   "POP",
   "XCHG",
-
-  // Aritmética
   "ADD",
   "SUB",
   "INC",
@@ -42,15 +39,11 @@ const VALID_INSTRUCTIONS = [
   "MUL",
   "DIV",
   "NEG",
-
-  // Lógica
   "AND",
   "OR",
   "XOR",
   "NOT",
   "CMP",
-
-  // Controle de fluxo
   "JMP",
   "JE",
   "JZ",
@@ -63,8 +56,6 @@ const VALID_INSTRUCTIONS = [
   "CALL",
   "RET",
   "LOOP",
-
-  // Outras
   "NOP",
   "HLT",
 ];
@@ -83,18 +74,19 @@ export function parseAssembly(source: string): ParseResult {
   const errors: ParseError[] = [];
   const pendingReferences: LabelReference[] = [];
 
-  // parse linha por linha
+  // processar cada linha
   for (let lineNum = 0; lineNum < lines.length; lineNum++) {
     const rawLine = lines[lineNum];
     if (!rawLine) continue;
 
+    // remove comentarios (tudo depois de ;)
     const lineWithoutComment = rawLine.split(";")[0];
     if (!lineWithoutComment) continue;
 
     const trimmed = lineWithoutComment.trim();
     if (!trimmed) continue;
 
-    // detecta labels (terminam com :)
+    // checa se é um label (termina com :)
     if (trimmed.endsWith(":")) {
       const labelName = trimmed.slice(0, -1).trim().toUpperCase();
 
@@ -107,6 +99,7 @@ export function parseAssembly(source: string): ParseResult {
         continue;
       }
 
+      // label duplicado?
       if (labels.has(labelName)) {
         errors.push({
           line: lineNum + 1,
@@ -128,13 +121,13 @@ export function parseAssembly(source: string): ParseResult {
     }
 
     if (parseResult.instruction) {
+      // verifica se tem labels nos argumentos que precisam ser resolvidos depois
       for (let i = 0; i < parseResult.instruction.args.length; i++) {
         const arg = parseResult.instruction.args[i];
         if (
           typeof arg === "string" &&
           !REGISTER_NAMES.includes(arg.toUpperCase())
         ) {
-          // Pode ser um label
           pendingReferences.push({
             instructionIndex: instructions.length,
             argIndex: i,
@@ -148,12 +141,14 @@ export function parseAssembly(source: string): ParseResult {
     }
   }
 
+  // calcula endereços das instruções
   let currentOffset = 0;
   for (const instr of instructions) {
     instr.address = currentOffset;
     currentOffset += instr.size;
   }
 
+  // mapeia labels pra offsets
   const labelOffsets = new Map<string, number>();
   for (const [labelName, instructionIndex] of labels.entries()) {
     const instruction = instructions[instructionIndex];
@@ -162,6 +157,7 @@ export function parseAssembly(source: string): ParseResult {
     }
   }
 
+  // resolve as referencias de labels
   for (const ref of pendingReferences) {
     const labelOffset = labelOffsets.get(ref.label);
 
@@ -188,12 +184,14 @@ function parseInstructionLine(
   lineNumber: number,
   originalCode: string
 ): { instruction?: Instruction; error?: ParseError } {
+  // separa opcode dos argumentos
   const firstSpace = line.indexOf(" ");
   const opcode = firstSpace === -1 ? line : line.slice(0, firstSpace);
   const argsText = firstSpace === -1 ? "" : line.slice(firstSpace + 1).trim();
 
   const opcodeUpper = opcode.toUpperCase();
 
+  // valida se é uma instrução conhecida
   if (!VALID_INSTRUCTIONS.includes(opcodeUpper)) {
     return {
       error: {
@@ -242,9 +240,7 @@ function parseArgument(text: string): {
   value?: string | number | null;
   error?: string;
 } {
-  if (!text) {
-    return { value: null };
-  }
+  if (!text) return { value: null };
 
   const upper = text.toUpperCase();
 
@@ -252,6 +248,7 @@ function parseArgument(text: string): {
     return { value: upper };
   }
 
+  // numero decimal
   if (/^[0-9]+$/.test(text)) {
     const value = parseInt(text, 10);
     if (value > 0xffff) {
@@ -260,6 +257,7 @@ function parseArgument(text: string): {
     return { value: value & 0xffff };
   }
 
+  // hexadecimal (0x...)
   if (/^0x[0-9a-fA-F]+$/.test(text)) {
     const value = parseInt(text, 16);
     if (value > 0xffff) {
@@ -297,8 +295,8 @@ function generateInstructionBytes(
   const bytes: number[] = [];
 
   switch (op) {
- 
     case "MOV": {
+      // MOV reg, imm
       if (
         args.length === 2 &&
         typeof args[0] === "string" &&
@@ -306,7 +304,6 @@ function generateInstructionBytes(
       ) {
         const reg = args[0];
         const imm = args[1];
-
 
         const regOpcodes: Record<string, number> = {
           AX: 0xb8,
@@ -322,28 +319,29 @@ function generateInstructionBytes(
         const opcode = regOpcodes[reg];
         if (opcode !== undefined) {
           bytes.push(opcode);
-          bytes.push(imm & 0xff); // Low byte
-          bytes.push((imm >> 8) & 0xff); // High byte
+          bytes.push(imm & 0xff);
+          bytes.push((imm >> 8) & 0xff);
         } else {
+          // fallback pra AX
           bytes.push(0xb8);
           bytes.push(imm & 0xff);
           bytes.push((imm >> 8) & 0xff);
         }
       } else {
-        // MOV reg, reg ou outras formas 
-        bytes.push(0x89); 
-        bytes.push(0xc0); 
+        // MOV reg, reg ou outras formas
+        bytes.push(0x89);
+        bytes.push(0xc0);
       }
       break;
     }
 
     case "ADD":
-      bytes.push(0x01); // ADD r/m16, r16
-      bytes.push(0xc0); 
+      bytes.push(0x01);
+      bytes.push(0xc0);
       break;
 
     case "SUB":
-      bytes.push(0x29); // SUB r/m16, r16
+      bytes.push(0x29);
       bytes.push(0xc0);
       break;
 
@@ -422,78 +420,78 @@ function generateInstructionBytes(
     case "JLE":
     case "CALL":
     case "LOOP":
-      // Jump com offset de 16 bits
-      bytes.push(0xe9); 
-      bytes.push(0x00); // Low byte do offset (será calculado depois)
-      bytes.push(0x00); // High byte do offset
+      // jump com offset de 16 bits (calcula depois)
+      bytes.push(0xe9);
+      bytes.push(0x00);
+      bytes.push(0x00);
       break;
 
     case "RET":
-      bytes.push(0xc3); 
+      bytes.push(0xc3);
       break;
 
     case "NOP":
-      bytes.push(0x90); // NOP
+      bytes.push(0x90);
       break;
 
     case "HLT":
-      bytes.push(0xf4); // HLT
+      bytes.push(0xf4);
       break;
 
     case "AND":
-      bytes.push(0x21); 
+      bytes.push(0x21);
       bytes.push(0xc0);
       break;
 
     case "OR":
-      bytes.push(0x09); 
+      bytes.push(0x09);
       bytes.push(0xc0);
       break;
 
     case "XOR":
-      bytes.push(0x31); 
+      bytes.push(0x31);
       bytes.push(0xc0);
       break;
 
     case "NOT":
-      bytes.push(0xf7); 
+      bytes.push(0xf7);
       bytes.push(0xd0);
       break;
 
     case "CMP":
-      bytes.push(0x39); 
+      bytes.push(0x39);
       bytes.push(0xc0);
       break;
 
     case "MUL":
-      bytes.push(0xf7); 
+      bytes.push(0xf7);
       bytes.push(0xe0);
       break;
 
     case "DIV":
-      bytes.push(0xf7); 
+      bytes.push(0xf7);
       bytes.push(0xf0);
       break;
 
     case "NEG":
-      bytes.push(0xf7); 
+      bytes.push(0xf7);
       bytes.push(0xd8);
       break;
 
     case "XCHG":
-      bytes.push(0x87); // XCHG r16, r/m16
+      bytes.push(0x87);
       bytes.push(0xc0);
       break;
 
     default:
-      
-      bytes.push(0x90); // NOP como fallback
+      // se não reconhecer, usa NOP
+      bytes.push(0x90);
   }
 
   return bytes;
 }
 
-
+// converte instrução de volta pra string (pra debug)
 export function disassemble(instruction: Instruction): string {
   const args = instruction.args
     .filter((a) => a !== null && a !== undefined)
