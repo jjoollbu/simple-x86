@@ -31,7 +31,7 @@ const VALID_INSTRUCTIONS = [
   "MOV",
   "PUSH",
   "POP",
-  "XCHG",
+  "XCHG", // faltando a lógica em instructions/arithmetic.ts
   "ADD",
   "SUB",
   "INC",
