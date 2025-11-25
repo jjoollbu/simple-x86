@@ -109,7 +109,7 @@ export function executeDIV(ctx: InstructionContext): string {
   const src = instruction.args[0];
   const divisor = ctx.getOperandValue(src);
 
-  // TODO: tratar overflow de divisão
+
   if (divisor === 0) {
     throw new Error("Divisão por zero");
   }
