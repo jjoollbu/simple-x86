@@ -1,7 +1,5 @@
-/**
- * Instruções de Controle de Fluxo
- * JMP, JE/JZ, JNE/JNZ, JG, JL, CALL, RET, LOOP, NOP, HLT
- */
+// Instruções de controle de fluxo
+// jumps, calls, loops, etc
 
 import { InstructionContext } from ".";
 
@@ -53,6 +51,7 @@ export function executeJG(ctx: InstructionContext): string {
   const { instruction } = ctx;
   const target = ctx.getOperandValue(instruction.args[0]);
 
+  // jump if greater: ZF=0 e SF=OF
   if (!ctx.state.flags.ZF && ctx.state.flags.SF === ctx.state.flags.OF) {
     ctx.state.registers.IP = target;
     ctx.markRegChanged("IP");
@@ -96,7 +95,7 @@ export function executeJLE(ctx: InstructionContext): string {
   const { instruction } = ctx;
   const target = ctx.getOperandValue(instruction.args[0]);
 
-  // JLE: Salta se menor ou igual (ZF = 1 OU SF != OF)
+  // jump if less or equal
   if (ctx.state.flags.ZF || ctx.state.flags.SF !== ctx.state.flags.OF) {
     ctx.state.registers.IP = target;
     ctx.markRegChanged("IP");
