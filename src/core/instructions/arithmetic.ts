@@ -1,7 +1,5 @@
-/**
- * Instruções Aritméticas
- * ADD, SUB, INC, DEC, MUL, DIV, NEG
- */
+// instruções aritméticas básicas
+// ADD, SUB, INC, DEC, MUL, DIV, NEG
 
 import { InstructionContext } from ".";
 
@@ -12,7 +10,7 @@ export function executeADD(ctx: InstructionContext): string {
   const v1 = ctx.readRegister(dst);
   const v2 = ctx.getOperandValue(src);
   const result = v1 + v2;
-  const final = result & 0xffff;
+  const final = result & 0xffff; // mask pra 16 bits
 
   ctx.writeRegister(dst, final);
   ctx.updateFlags(final, result > 0xffff);
@@ -111,6 +109,7 @@ export function executeDIV(ctx: InstructionContext): string {
   const src = instruction.args[0];
   const divisor = ctx.getOperandValue(src);
 
+  // TODO: tratar overflow de divisão
   if (divisor === 0) {
     throw new Error("Divisão por zero");
   }
