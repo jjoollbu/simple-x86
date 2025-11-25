@@ -1,7 +1,7 @@
 {
   "name": "sim-x86-simple2",
-  "version": "2.0.0",
-  "description": "Simulador x86 em Modo Real - Versão Simplificada e Organizada",
+  "version": "1.0.0",
+  "description": "Simulador x86 modo real 16-bit",
   "type": "module",
   "scripts": {
     "dev": "vite",
