@@ -1,7 +1,5 @@
-/**
- * Parser de Assembly x86 Simplificado
- * Suporta labels, comentários, e instruções básicas
- */
+// Parser básico de assembly x86
+// suporta instruções básicas, labels e comentários
 
 import type { ParseResult, ParseError, Instruction } from "./types";
 
@@ -85,6 +83,7 @@ export function parseAssembly(source: string): ParseResult {
   const errors: ParseError[] = [];
   const pendingReferences: LabelReference[] = [];
 
+  // parse linha por linha
   for (let lineNum = 0; lineNum < lines.length; lineNum++) {
     const rawLine = lines[lineNum];
     if (!rawLine) continue;
@@ -95,7 +94,7 @@ export function parseAssembly(source: string): ParseResult {
     const trimmed = lineWithoutComment.trim();
     if (!trimmed) continue;
 
-    // Detectar label (termina com :)
+    // detecta labels (terminam com :)
     if (trimmed.endsWith(":")) {
       const labelName = trimmed.slice(0, -1).trim().toUpperCase();
 
@@ -291,7 +290,6 @@ function isValidLabel(name: string): boolean {
   return /^[A-Za-z_][A-Za-z0-9_]*$/.test(name);
 }
 
-
 function generateInstructionBytes(
   op: string,
   args: (string | number | null)[]
@@ -299,7 +297,7 @@ function generateInstructionBytes(
   const bytes: number[] = [];
 
   switch (op) {
-    // MOV reg16, imm16
+ 
     case "MOV": {
       if (
         args.length === 2 &&
@@ -309,10 +307,7 @@ function generateInstructionBytes(
         const reg = args[0];
         const imm = args[1];
 
-        // MOV AX, imm16 → 0xB8 + low byte + high byte
-        // MOV BX, imm16 → 0xBB + low byte + high byte
-        // MOV CX, imm16 → 0xB9 + low byte + high byte
-        // MOV DX, imm16 → 0xBA + low byte + high byte
+
         const regOpcodes: Record<string, number> = {
           AX: 0xb8,
           BX: 0xbb,
@@ -335,21 +330,21 @@ function generateInstructionBytes(
           bytes.push((imm >> 8) & 0xff);
         }
       } else {
-        // MOV reg, reg ou outras formas → opcode genérico
-        bytes.push(0x89); // MOV r/m16, r16
-        bytes.push(0xc0); // ModR/M placeholder
+        // MOV reg, reg ou outras formas 
+        bytes.push(0x89); 
+        bytes.push(0xc0); 
       }
       break;
     }
 
     case "ADD":
       bytes.push(0x01); // ADD r/m16, r16
-      bytes.push(0xc0); // ModR/M placeholder
+      bytes.push(0xc0); 
       break;
 
     case "SUB":
       bytes.push(0x29); // SUB r/m16, r16
-      bytes.push(0xc0); // ModR/M placeholder
+      bytes.push(0xc0);
       break;
 
     case "INC": {
@@ -428,13 +423,13 @@ function generateInstructionBytes(
     case "CALL":
     case "LOOP":
       // Jump com offset de 16 bits
-      bytes.push(0xe9); // JMP near
+      bytes.push(0xe9); 
       bytes.push(0x00); // Low byte do offset (será calculado depois)
       bytes.push(0x00); // High byte do offset
       break;
 
     case "RET":
-      bytes.push(0xc3); // RET near
+      bytes.push(0xc3); 
       break;
 
     case "NOP":
@@ -446,42 +441,42 @@ function generateInstructionBytes(
       break;
 
     case "AND":
-      bytes.push(0x21); // AND r/m16, r16
+      bytes.push(0x21); 
       bytes.push(0xc0);
       break;
 
     case "OR":
-      bytes.push(0x09); // OR r/m16, r16
+      bytes.push(0x09); 
       bytes.push(0xc0);
       break;
 
     case "XOR":
-      bytes.push(0x31); // XOR r/m16, r16
+      bytes.push(0x31); 
       bytes.push(0xc0);
       break;
 
     case "NOT":
-      bytes.push(0xf7); // NOT r/m16
+      bytes.push(0xf7); 
       bytes.push(0xd0);
       break;
 
     case "CMP":
-      bytes.push(0x39); // CMP r/m16, r16
+      bytes.push(0x39); 
       bytes.push(0xc0);
       break;
 
     case "MUL":
-      bytes.push(0xf7); // MUL r/m16
+      bytes.push(0xf7); 
       bytes.push(0xe0);
       break;
 
     case "DIV":
-      bytes.push(0xf7); // DIV r/m16
+      bytes.push(0xf7); 
       bytes.push(0xf0);
       break;
 
     case "NEG":
-      bytes.push(0xf7); // NEG r/m16
+      bytes.push(0xf7); 
       bytes.push(0xd8);
       break;
 
@@ -491,16 +486,14 @@ function generateInstructionBytes(
       break;
 
     default:
-      // Instrução desconhecida → opcode genérico
+      
       bytes.push(0x90); // NOP como fallback
   }
 
   return bytes;
 }
 
-/**
- * Desassembla uma instrução para string legível
- */
+
 export function disassemble(instruction: Instruction): string {
   const args = instruction.args
     .filter((a) => a !== null && a !== undefined)
