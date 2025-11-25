@@ -1,16 +1,17 @@
 # Simulador x86 em Modo Real
 
-Simulador educacional de processador x86 operando em modo real (16 bits), com visualização detalhada de barramentos, registradores e memória. Implementado em TypeScript com interface React.
+Simulador básico de processador x86 em modo real (16 bits). Mostra como funciona os barramentos, registradores e memória.
 
-## Visão Geral
+Feito em TypeScript + React.
 
-Este projeto simula o funcionamento de um processador x86 simplificado, demonstrando os conceitos fundamentais de arquitetura de computadores:
+## O que faz
 
-- Ciclo de busca-decodificação-execução (fetch-decode-execute)
-- Sistema de barramentos (endereço, dados e controle)
-- Gerenciamento de registradores e flags
-- Cálculo de endereços físicos em modo real
-- Execução passo a passo com rastreamento completo
+- Executa instruções assembly x86 básicas
+- Mostra ciclo fetch-decode-execute
+- Visualiza barramentos (endereço, dados, controle)
+- Execução passo a passo pra ver o que tá acontecendo
+
+**Nota**: É um simulador simplificado pra fins educacionais, não implementa tudo do x86 real.
 
 ## Estrutura do Projeto
 
@@ -47,155 +48,51 @@ simple2/
 
 ## Fluxo de Barramentos
 
-O simulador implementa o modelo de três barramentos da arquitetura x86:
-
-### 1. Barramento de Endereço (Address Bus)
-
-Transporta endereços de memória do processador para a memória.
-
-- Largura: 20 bits (modo real)
-- Direção: CPU → Memória
-- Capacidade: 1 MB (2^20 bytes)
-- Cálculo: Endereço Físico = (Segmento * 16) + Offset
-
-**Exemplo:**
+## Estrutura do Projeto
 
 ```
-CS = 0x1000, IP = 0x0050
-Endereço Físico = (0x1000 * 16) + 0x0050 = 0x10050
+src/
+├── core/           # lógica do simulador
+│   ├── cpu.ts      # implementação da CPU
+│   ├── memory.ts   # sistema de memória
+│   ├── parser.ts   # parser assembly
+│   └── instructions/  # implementação das instruções
+└── ui/             # interface React
+    └── components/ # componentes visuais
 ```
 
-### 2. Barramento de Dados (Data Bus)
+## Como funciona
 
-Transporta dados entre CPU e memória (bidirecional).
+### Barramentos
 
-- Largura: 8 bits (1 byte por transferência)
-- Direção: CPU ↔ Memória
-- Operações: Leitura (READ) e Escrita (WRITE)
+O simulador tem 3 barramentos:
 
-**Exemplo de Leitura:**
+**Barramento de Endereço**: CPU envia endereços pra memória (20 bits no modo real)
 
-```
-Passo 1: CPU coloca endereço 0x10050 no barramento de endereço
-Passo 2: CPU envia sinal READ no barramento de controle
-Passo 3: Memória coloca byte no barramento de dados
-Passo 4: CPU lê o byte do barramento de dados
-```
+- Cálculo: endereço físico = (segmento \* 16) + offset
 
-### 3. Barramento de Controle (Control Bus)
+**Barramento de Dados**: carrega dados entre CPU e memória (bidirecional)
 
-Transporta sinais de controle e sincronização.
+**Barramento de Controle**: sinais tipo READ, WRITE, FETCH
 
-- Sinais principais:
-  - READ: Leitura da memória
-  - WRITE: Escrita na memória
-  - FETCH: Busca de instrução
-  - DECODE: Decodificação
+### Ciclo fetch-decode-execute
 
-### Ciclo de Execução de Instrução
+Cada instrução passa por 3 fases:
 
-Cada instrução passa por três fases principais, com múltiplas operações de barramento:
+1. **FETCH**: CPU busca instrução da memória (usa CS:IP)
+2. **DECODE**: CPU decodifica o opcode e operandos
+3. **EXECUTE**: Executa a operação, atualiza registradores e flags
 
-#### Fase 1: FETCH (Busca)
+### Registradores
 
-```
-1. CPU → Barramento Endereço: Endereço da instrução (CS:IP)
-2. CPU → Barramento Controle: Sinal FETCH
-3. Memória → Barramento Dados: Opcode da instrução
-4. CPU lê opcode do barramento de dados
-```
+**Propósito geral**: AX, BX, CX, DX
+**Ponteiros**: SP (stack), BP, SI, DI  
+**Segmentos**: CS, DS, SS, ES
+**IP**: instruction pointer
 
-#### Fase 2: DECODE (Decodificação)
+### Flags
 
-```
-1. CPU analisa o opcode
-2. Determina operandos necessários
-3. Se operando na memória:
-   - CPU → Barramento Endereço: Endereço do operando
-   - CPU → Barramento Controle: Sinal READ
-   - Memória → Barramento Dados: Valor do operando
-```
-
-#### Fase 3: EXECUTE (Execução)
-
-```
-1. CPU executa a operação na ALU
-2. Atualiza registradores
-3. Atualiza flags (ZF, CF, SF, OF)
-4. Se escrita na memória:
-   - CPU → Barramento Endereço: Endereço destino
-   - CPU → Barramento Dados: Valor a escrever
-   - CPU → Barramento Controle: Sinal WRITE
-```
-
-### Exemplo Completo: Instrução MOV BX, AX
-
-```assembly
-MOV BX, AX  ; Copia valor de AX para memória apontada por BX
-```
-
-
-**Sequência de barramento:**
-
-```
-[FETCH]
-1. Barramento Endereço: 0x10000 (CS:IP)
-   Barramento Controle: FETCH
-   Barramento Dados: ← 0x89 (opcode MOV)
-
-2. Barramento Endereço: 0x10001 (próximo byte)
-   Barramento Controle: FETCH
-   Barramento Dados: ← 0x07 (mod/rm byte)
-
-[DECODE]
-3. CPU calcula endereço destino:
-   Endereço = (DS << 4) + BX
-   Endereço = (0x2000 << 4) + 0x0100
-   Endereço = 0x20100
-
-[EXECUTE]
-4. Barramento Endereço: 0x20100
-   Barramento Dados: → 0x34 (byte baixo de AX)
-   Barramento Controle: WRITE
-
-5. Barramento Endereço: 0x20101
-   Barramento Dados: → 0x12 (byte alto de AX)
-   Barramento Controle: WRITE
-```
-
-## Sistema de Memória
-
-### Modo Real (16 bits)
-
-O processador opera em modo real, usando segmentação para acessar 1 MB de memória:
-
-- Registradores de segmento: CS, DS, SS, ES (16 bits cada)
-- Registradores de offset: IP, SP, BP, SI, DI, etc. (16 bits)
-- Endereço físico de 20 bits: (Segmento * 16) + Offset
-
-### Acesso à Memória
-
-O simulador rastreia todos os acessos:
-
-```typescript
-interface MemoryAccess {
-  type: "READ" | "WRITE";
-  address: number;
-  value: number;
-  timestamp: number;
-}
-```
-
-## Registradores
-
-### Registradores de Propósito Geral (16 bits)
-
-- **AX** (Accumulator): Acumulador, usado em operações aritméticas
-- **BX** (Base): Ponteiro base, usado em endereçamento
-- **CX** (Counter): Contador, usado em loops
-- **DX** (Data): Dados, usado em operações de I/O
-
-### Registradores Ponteiros (16 bits)
+ZF (zero), CF (carry), SF (sign), OF (overflow)
 
 - **SP** (Stack Pointer): Ponteiro do topo da pilha
 - **BP** (Base Pointer): Ponteiro base da pilha
@@ -352,28 +249,36 @@ ADD AX, BX
 HLT
 ```
 
-### 2. Carregar Programa
+### Como usar
 
-Clique em "Carregar Programa" para parsear e carregar na memória.
+1. Escreve o código assembly na caixa de texto
+2. Clica em "Carregar Programa"
+3. Usa "Step" pra executar instrução por instrução (ou "Run" pra rodar tudo)
+4. Vê os registradores, memória e barramentos mudando
 
-### 3. Executar
+## Instruções suportadas
 
-- **Step**: Executa uma instrução por vez
-- **Run**: Executa automaticamente (pode pausar)
-- **Reset**: Reinicia o estado da CPU
+- **Dados**: MOV, PUSH, POP
+- **Aritmética**: ADD, SUB, INC, DEC, MUL, DIV, NEG
+- **Lógica**: AND, OR, XOR, NOT, CMP
+- **Controle**: JMP, JE, JNE, JG, JL, CALL, RET, LOOP
+- **Outras**: NOP, HLT
 
-### 4. Visualizar
+## Rodando o projeto
 
-- **Registradores**: Valores atuais destacados quando modificados
-- **Flags**: Estado das flags de condição
-- **Memória**: Visualização hexadecimal com destaques
-- **Barramentos**: Sequência de operações em cada instrução
-- **Trace**: Histórico completo de execução
+```bash
+npm install
+npm run dev
+```
 
-## Autor
+## TODO
 
-Projeto educacional para disciplina de Arquitetura de Computadores
+- [ ] Implementar XCHG
+- [ ] Melhorar parser de operandos de memória
+- [ ] Adicionar mais exemplos
+- [ ] Overflow flag não tá 100% correto
+- [ ] LocalStorage pra salvar programas
 
 ---
 
-Desenvolvido com TypeScript, React, Tailwind e Vite
+Projeto feito pra matéria de Arquitetura de Computadores
