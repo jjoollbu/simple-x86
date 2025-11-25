@@ -1,10 +1,8 @@
-/**
- * Instruções de Transferência de Dados
- * MOV, PUSH, POP
- */
+// instruções de movimentação de dados
+// MOV, PUSH, POP
+// faltou XCHG
 
 import { InstructionContext } from ".";
-
 
 export function executeMOV(ctx: InstructionContext): string {
   const { instruction } = ctx;
@@ -12,6 +10,7 @@ export function executeMOV(ctx: InstructionContext): string {
   const src = instruction.args[1];
   const value = ctx.getOperandValue(src);
 
+  // só funciona com registradores por enquanto
   if (typeof dest === "string") {
     ctx.writeRegister(dest, value);
     ctx.markRegChanged(dest);
