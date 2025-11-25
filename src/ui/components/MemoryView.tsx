@@ -1,4 +1,6 @@
-// components/MemoryView.tsx
+// visualiza memória em formato hex dump
+// mostra só as partes usadas pra não ficar gigante
+
 import type { CPU } from "../../core/cpu";
 
 type MemoryViewProps = {
@@ -13,16 +15,16 @@ export function MemoryView({ cpu, highlightedAddresses }: MemoryViewProps) {
     return value.toString(16).toUpperCase().padStart(padding, "0");
   };
 
-  // Encontra todos os endereços ocupados (não-zero)
+  // acha endereços que tem algo (não são zero)
   const getOccupiedRanges = () => {
     const occupied: { address: number; value: number }[] = [];
 
     for (let i = 0; i < cpu.memory.size; i++) {
-      const value = cpu.memory.data[i];
-      if (value !== undefined && value !== 0) {
+      const val = cpu.memory.data[i];
+      if (val !== undefined && val !== 0) {
         occupied.push({
           address: i,
-          value: value,
+          value: val,
         });
       }
     }
