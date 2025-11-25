@@ -1,7 +1,5 @@
-/**
- * Dispatcher Central de Execução
- * Delega a execução para os handlers de instrução específicos
- */
+// dispatcher que roteia instruções pros handlers corretos
+// organizado por tipo: aritmética, lógica, controle, dados
 
 import * as Arithmetic from "./arithmetic";
 import * as Logical from "./logical";
@@ -9,7 +7,7 @@ import * as Control from "./control";
 import * as DataTransfer from "./data-transfer";
 import { InstructionContext } from ".";
 
-
+// tenta executar instrução aritmética
 function tryHandleArithmetic(ctx: InstructionContext): string | null {
   const opcode = ctx.instruction.op.toUpperCase();
 
@@ -29,10 +27,9 @@ function tryHandleArithmetic(ctx: InstructionContext): string | null {
     case "NEG":
       return Arithmetic.executeNEG(ctx);
     default:
-      return null;
+      return null; // não é aritmética
   }
 }
-
 
 function tryHandleLogical(ctx: InstructionContext): string | null {
   const opcode = ctx.instruction.op.toUpperCase();
@@ -52,7 +49,6 @@ function tryHandleLogical(ctx: InstructionContext): string | null {
       return null;
   }
 }
-
 
 function tryHandleControl(
   ctx: InstructionContext,
@@ -93,7 +89,6 @@ function tryHandleControl(
   }
 }
 
-
 function tryHandleDataTransfer(
   ctx: InstructionContext,
   push: (value: number) => void,
@@ -113,27 +108,28 @@ function tryHandleDataTransfer(
   }
 }
 
-
+// função principal de execução
 export function executeInstruction(
   ctx: InstructionContext,
   push: (value: number) => void,
   pop: () => number
 ): string {
-  let result: string | null = null;
+  let res: string | null = null;
 
-  result = tryHandleArithmetic(ctx);
-  if (result !== null) return result;
+  // tenta cada tipo de instrução até achar
+  res = tryHandleArithmetic(ctx);
+  if (res !== null) return res;
 
-  result = tryHandleLogical(ctx);
-  if (result !== null) return result;
+  res = tryHandleLogical(ctx);
+  if (res !== null) return res;
 
-  result = tryHandleControl(ctx, push, pop);
-  if (result !== null) return result;
+  res = tryHandleControl(ctx, push, pop);
+  if (res !== null) return res;
 
-  result = tryHandleDataTransfer(ctx, push, pop);
-  if (result !== null) return result;
+  res = tryHandleDataTransfer(ctx, push, pop);
+  if (res !== null) return res;
 
-  // Instrução desconhecida
+  // não achou? instrução não implementada
   ctx.nextIP();
   return `Instrução desconhecida: ${ctx.instruction.op}`;
 }
